@@ -1,7 +1,12 @@
 import random 
+from math import inf
 import numpy as np
 
-eval_dict = {"X": 1, "O": -1} #Assigns an eval value if the player/opponent wins
+
+count = 0 #Represents the number of recurssive calls used by the minimax function
+player = input("Do you want to be x or o: ").upper() #Determines the player who starts
+opponent = "O" if player == "X" else "X"
+eval_dict = {player: 1, opponent: -1} #Assigns an eval value if the player/opponent wins
 
 def main():
     ... 
@@ -24,8 +29,7 @@ def print_board(board):
             print("-"* 18)
 
 
-def play_move(row, col, player):
-    global board
+def play_move(row, col, board, player):
     if board[row, col] in [str(i) for i in range(1, 10)]:  board[row, col] = player 
 
 
@@ -47,7 +51,7 @@ def check_winner(board):
     
     return None
 
-def get_empty_square(board):
+def get_empty_squares(board):
     moves = []
     for i in range(3):
         for j in range(3):
@@ -56,21 +60,74 @@ def get_empty_square(board):
     return moves
 
 def check_draw(board):
-   if len(get_empty_square(board)) == 0 and not check_winner(board):
+   if len(get_empty_squares(board)) == 0 and not check_winner(board):
        return True 
    return False
 
 
-play_move(0, 0, "X")
-play_move(1, 1, "O")
-play_move(0, 2, "X")
-play_move(0, 1, "O")
-play_move(2, 1, "X")
-play_move(1, 0, "O")
-play_move(1, 2, "X")
-play_move(2, 2, "O")
-play_move(2, 0, "X")
+def minimax(board, depth, is_maximizer):
+    global count 
+    winner  = check_winner(board)
+    if winner:
+        count += 1
+        return eval_dict[winner]
+    
+    if check_draw(board):
+        count += 1
+        return 0
+    
+    if is_maximizer:
+        max_eval = -inf
+        for move in get_empty_squares(board):
+            board_copy = np.copy(board)
+            play_move(move[0], move[1], board_copy, player)
+            eval = minimax(board_copy, depth + 1, False)
+            max_eval = max(max_eval, eval)
+        return max_eval
+    else:
+        min_eval = inf
+        for move in get_empty_squares(board):
+            board_copy = np.copy(board)
+            play_move(move[0], move[1], board_copy, opponent)
+            eval = minimax(board_copy, depth + 1, True)
+            min_eval = min(min_eval, eval)
+        return min_eval
 
-print_board(board)
 
-print(check_draw(board))
+def minimaxAB(board, depth, alpha, beta, is_maximizer):
+    global count 
+    winner  = check_winner(board)
+    if winner:
+        count += 1
+        return eval_dict[winner]
+    
+    if check_draw(board):
+        count += 1
+        return 0
+    
+    if is_maximizer:
+        max_eval = -inf
+        for move in get_empty_squares(board):
+            board_copy = np.copy(board)
+            play_move(move[0], move[1], board_copy, player)
+            eval = minimaxAB(board_copy, depth + 1, alpha, beta, False)
+            max_eval = max(max_eval, eval)
+            alpha = max(alpha, eval)
+            if beta <= alpha:
+                break
+        return max_eval
+    else:
+        min_eval = inf
+        for move in get_empty_squares(board):
+            board_copy = np.copy(board)
+            play_move(move[0], move[1], board_copy, opponent)
+            eval = minimaxAB(board_copy, depth + 1, alpha, beta, True)
+            min_eval = min(min_eval, eval)
+            beta = min(beta, min_eval)
+            if beta <= alpha:
+                break
+        return min_eval
+
+
+            
+print(minimaxAB(board, 0, -inf, inf, True), count)
