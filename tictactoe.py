@@ -26,7 +26,8 @@ def print_board(board):
 
 def play_move(row, col, player):
     global board
-    board[row, col] = player
+    if board[row, col] in [str(i) for i in range(1, 10)]:  board[row, col] = player 
+
 
 
 #Check win conditions 
@@ -46,8 +47,30 @@ def check_winner(board):
     
     return None
 
+def get_empty_square(board):
+    moves = []
+    for i in range(3):
+        for j in range(3):
+            if board[i, j] in [str(i) for i in range(1, 10)]:
+                moves.append((i, j))
+    return moves
 
+def check_draw(board):
+   if len(get_empty_square(board)) == 0 and not check_winner(board):
+       return True 
+   return False
+
+
+play_move(0, 0, "X")
+play_move(1, 1, "O")
 play_move(0, 2, "X")
-play_move(1, 1, "X")
+play_move(0, 1, "O")
 play_move(2, 1, "X")
-print(check_winner(board))
+play_move(1, 0, "O")
+play_move(1, 2, "X")
+play_move(2, 2, "O")
+play_move(2, 0, "X")
+
+print_board(board)
+
+print(check_draw(board))
