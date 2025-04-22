@@ -1,7 +1,7 @@
 import random 
 import numpy as np
 
-players = {"X": 1, "O": -1} #Assigns an eval value if the player/opponent wins
+eval_dict = {"X": 1, "O": -1} #Assigns an eval value if the player/opponent wins
 
 def main():
     ... 
@@ -45,7 +45,9 @@ def check_winner(board):
         return board[1, 1]
     
     return None
-    
 
-play_move(0, 0, "X")
-print_board(board)
+
+play_move(0, 2, "X")
+play_move(1, 1, "X")
+play_move(2, 1, "X")
+print(check_winner(board))
