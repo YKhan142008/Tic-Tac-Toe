@@ -118,7 +118,6 @@ transposition_table = {}
 
 def minimaxAB(board, depth, alpha, beta, is_maximizer):
     global count, transposition_table
-    count += 1  # Increment count for each recursion
 
     key = board.tobytes()
 
@@ -127,14 +126,20 @@ def minimaxAB(board, depth, alpha, beta, is_maximizer):
 
     winner = check_winner(board)
     if winner:
+        count += 1
+        print(count)
+        print_board(board)
         return eval_dict[winner]
     
     if check_draw(board):
+        count += 1
+        print(count)
+        print_board(board)
         return 0
     
     if is_maximizer:
         max_eval = -inf
-        for move in get_empty_squares(board):
+        for move in order_moves(board, player):
             board_copy = np.copy(board)
             play_move(move[0], move[1], board_copy, player)
             eval = minimaxAB(board_copy, depth + 1, alpha, beta, False)
@@ -146,7 +151,7 @@ def minimaxAB(board, depth, alpha, beta, is_maximizer):
         return max_eval
     else:
         min_eval = inf
-        for move in get_empty_squares(board):
+        for move in order_moves(board, opponent):
             board_copy = np.copy(board)
             play_move(move[0], move[1], board_copy, opponent)
             eval = minimaxAB(board_copy, depth + 1, alpha, beta, True)
@@ -158,4 +163,4 @@ def minimaxAB(board, depth, alpha, beta, is_maximizer):
         return min_eval
 
 
-print(count, minimaxAB(board, 0, -inf, inf, True))
+print(minimaxAB(board, 0, -inf, inf, True), count)
