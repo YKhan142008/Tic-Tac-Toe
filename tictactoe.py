@@ -1,5 +1,7 @@
 import random 
-import numpy as np 
+import numpy as np
+
+players = {"X": 1, "O": -1} #Assigns an eval value if the player/opponent wins
 
 def main():
     ... 
@@ -21,4 +23,28 @@ def print_board(board):
         if i < np.size(board, 0) - 1:
             print("-"* 18)
 
-print_board(board)
+#Check win conditions 
+def check_winner(board):
+    #Check horizontal and vertical winner
+    for i in range(3):
+        if np.all(board[i, :] == board[i, 0]):
+            return board[i, 0]
+        if np.all(board[:, i] == board[0, i]):
+            return board[0, i]
+    
+    #Diagonal winner 
+    if np.all(np.diag(board) == board[1, 1]):
+        return board[1,1]
+    if np.all(np.diag(np.fliplr(board)) == board[1, 1]):
+        return board[1, 1]
+    
+    return None
+    
+     
+    
+_board = np.array([["1", "2", "3"],
+                  ["4", "5", "6"],
+                  ["7", "8", "9"]])
+
+print(check_winner(_board))
+#print_board(board)
