@@ -59,6 +59,26 @@ def get_empty_squares(board):
                 moves.append((i, j))
     return moves
 
+def order_moves(board, player):
+    moves = get_empty_squares(board)
+    ordered_moves = []
+
+    for move in moves:
+        board_copy = np.copy(board)
+        play_move(move[0], move[1], board_copy, player)
+
+        if check_winner(board_copy) == player:
+            # Winning move, add to the front
+            ordered_moves.insert(0, move)
+            
+        else:
+            # Non-winning move, add to the back
+            ordered_moves.append(move)
+
+    return ordered_moves
+
+        
+
 def check_draw(board):
    if len(get_empty_squares(board)) == 0 and not check_winner(board):
        return True 
@@ -70,7 +90,7 @@ def minimax(board, depth, is_maximizer):
     winner  = check_winner(board)
     if winner:
         count += 1
-        return eval_dict[winner]
+        return eval_dict[winner] * (10 - depth)
     
     if check_draw(board):
         count += 1
@@ -94,8 +114,15 @@ def minimax(board, depth, is_maximizer):
         return min_eval
 
 
+transposition_table = {}
+
 def minimaxAB(board, depth, alpha, beta, is_maximizer):
-    global count 
+    global count, transposition_table
+    key = board.tobytes()
+
+    if key in transposition_table:
+        return transposition_table[key]
+
     winner  = check_winner(board)
     if winner:
         count += 1
@@ -107,7 +134,7 @@ def minimaxAB(board, depth, alpha, beta, is_maximizer):
     
     if is_maximizer:
         max_eval = -inf
-        for move in get_empty_squares(board):
+        for move in order_moves(board, player):
             board_copy = np.copy(board)
             play_move(move[0], move[1], board_copy, player)
             eval = minimaxAB(board_copy, depth + 1, alpha, beta, False)
@@ -115,10 +142,11 @@ def minimaxAB(board, depth, alpha, beta, is_maximizer):
             alpha = max(alpha, eval)
             if beta <= alpha:
                 break
+        transposition_table[key] = max_eval
         return max_eval
     else:
         min_eval = inf
-        for move in get_empty_squares(board):
+        for move in order_moves(board, opponent):
             board_copy = np.copy(board)
             play_move(move[0], move[1], board_copy, opponent)
             eval = minimaxAB(board_copy, depth + 1, alpha, beta, True)
@@ -126,6 +154,7 @@ def minimaxAB(board, depth, alpha, beta, is_maximizer):
             beta = min(beta, min_eval)
             if beta <= alpha:
                 break
+        transposition_table[key] = min_eval
         return min_eval
 
 
