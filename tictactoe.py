@@ -9,7 +9,7 @@ def main():
 
 #Initialise board 
 def create_board():
-    return np.arange(1, 10).reshape(3,3)
+    return np.arange(1, 10).astype(str).reshape(3,3)
 
 board = create_board()
 
@@ -22,6 +22,12 @@ def print_board(board):
         print(board_lines)
         if i < np.size(board, 0) - 1:
             print("-"* 18)
+
+
+def play_move(row, col, player):
+    global board
+    board[row, col] = player
+
 
 #Check win conditions 
 def check_winner(board):
@@ -40,11 +46,6 @@ def check_winner(board):
     
     return None
     
-     
-    
-_board = np.array([["1", "2", "3"],
-                  ["4", "5", "6"],
-                  ["7", "8", "9"]])
 
-print(check_winner(_board))
-#print_board(board)
+play_move(0, 0, "X")
+print_board(board)
