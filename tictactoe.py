@@ -11,6 +11,7 @@ def create_board():
 
 board = create_board()
 
+#Pretty Print
 def print_board(board):
     board_lines = " " * 5 + "|" + " "*5 + "|" + " "*5  
     for i in range(np.size(board, 0)):
