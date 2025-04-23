@@ -8,11 +8,13 @@ count = 0 #Represents the number of recurssive calls used by the minimax functio
 
 
 def main():
-    player = '' #Determines the player who starts
-    while matches := re.search(r"^(o|x)*$", player):
-        player = matches.group(1)
-    else:
-        player = input("Do you want to be x or o: ").upper()
+   
+    while True:
+        player = input("Do you want to be x or o: ").strip().upper()
+        if player == "O" or player == "X":
+            break
+        else:
+            continue
     
     opponent = "O" if player == "X" else "X"
     eval_dict = {player: 1, opponent: -1} #Assigns an eval value if the player/opponent wins
