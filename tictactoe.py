@@ -1,15 +1,23 @@
-import random 
+import random
+import re 
 from math import inf
 import numpy as np
 
 
 count = 0 #Represents the number of recurssive calls used by the minimax function
-player = input("Do you want to be x or o: ").upper() #Determines the player who starts
-opponent = "O" if player == "X" else "X"
-eval_dict = {player: 1, opponent: -1} #Assigns an eval value if the player/opponent wins
+
 
 def main():
-    ... 
+    player = None #Determines the player who starts
+    while matches := re.search(r"^*(o|x)$", player):
+        player = matches.group(1)
+    else:
+        player = input("Do you want to be x or o: ").upper()
+    
+    opponent = "O" if player == "X" else "X"
+    eval_dict = {player: 1, opponent: -1} #Assigns an eval value if the player/opponent wins
+
+    
 
 
 #Initialise board 
@@ -85,38 +93,9 @@ def check_draw(board):
    return False
 
 
-def minimax(board, depth, is_maximizer):
-    global count 
-    winner  = check_winner(board)
-    if winner:
-        count += 1
-        return eval_dict[winner] * (10 - depth)
-    
-    if check_draw(board):
-        count += 1
-        return 0
-    
-    if is_maximizer:
-        max_eval = -inf
-        for move in get_empty_squares(board):
-            board_copy = np.copy(board)
-            play_move(move[0], move[1], board_copy, player)
-            eval = minimax(board_copy, depth + 1, False)
-            max_eval = max(max_eval, eval)
-        return max_eval
-    else:
-        min_eval = inf
-        for move in get_empty_squares(board):
-            board_copy = np.copy(board)
-            play_move(move[0], move[1], board_copy, opponent)
-            eval = minimax(board_copy, depth + 1, True)
-            min_eval = min(min_eval, eval)
-        return min_eval
-
-
 transposition_table = {}
 
-def minimaxAB(board, depth, alpha, beta, current_player):
+def minimaxAB(board, depth, alpha, beta, eval_dict, current_player):
     global count, transposition_table
 
     key = board.tobytes()
@@ -134,7 +113,8 @@ def minimaxAB(board, depth, alpha, beta, current_player):
         return 0
     
     is_maximizer = eval_dict[current_player] == 1
-    next_player = opponent if current_player == player else player
+    players = list(eval_dict.keys())
+    next_player = players[1] if current_player == players[0] else players[1]
 
     if is_maximizer:
         max_eval = -inf
@@ -162,17 +142,18 @@ def minimaxAB(board, depth, alpha, beta, current_player):
         return min_eval
 
 
-def play_best_move(board, current_player):
+def play_best_move(board, eval_dict, current_player):
     is_maximizer = eval_dict[current_player] == 1
     best_score = -inf if is_maximizer else inf
     best_move = None
+    players = list(eval_dict.keys())
 
     for move in order_moves(board, current_player):
         board_copy = np.copy(board)
         play_move(move[0], move[1], board_copy, current_player)
 
-        next_player = opponent if current_player == player else player
-        score = minimaxAB(board_copy, 0, -inf, inf, next_player)  # ✅ FIXED HERE
+        next_player = players[1] if current_player == players[0] else players[0]
+        score = minimaxAB(board_copy, 0, -inf, inf, next_player) 
 
         if (is_maximizer and score > best_score) or (not is_maximizer and score < best_score):
             best_score = score
@@ -183,10 +164,5 @@ def play_best_move(board, current_player):
 
 
 
-print(eval_dict)
-play_best_move(board, player)
-print_board(board)
-play_best_move(board, opponent)
-print_board(board)
-play_best_move(board, player)
-print_board(board)
+if __name__ == "__main__":
+    main()
