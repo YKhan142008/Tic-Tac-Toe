@@ -8,32 +8,73 @@ count = 0 #Represents the number of recurssive calls used by the minimax functio
 
 
 def main():
-    player = None
+    board = create_board()
+    print_board(board)
+    player = input("Do you want to be x or o: ").strip().upper()
     
     while True:
         if player == "O" or player == "X":
-            break
+            pvc = input("Would you like to play against a computer (Y or N) ").strip().upper()
+            if pvc in ["Y", "N"]:
+                break 
+            continue
+            
         else:
             print("You must enter x or o")
             player = input("Do you want to be x or o: ").strip().upper()
         
-        pvc = input("Would you like to play against a computer (Y or N) ").strip().upper()
-        if pvc in ["Y", "N"]:
-            break 
         
     
     opponent = "O" if player == "X" else "X"
     eval_dict = {player: 1, opponent: -1} #Assigns an eval value if the player/opponent wins
-    
+    if pvc == "N":
+        player_versus_player(board, player, opponent)
+    else:
+        return
+
+
+def player_versus_player(board, player, opponent):
+    turn = 0
+    while True:
+        current_player = players_turn(player, opponent, turn)
+        try:
+            move = int(input(f"Enter the number you want to play {current_player}: "))
+        except ValueError:
+            print(f"Index must be a number.")
+        
+        if move not in range(1, 10):
+            print("Index must be in range (1-9)")
+        
+        row, col = get_pos(move)
+        play_move(row, col, board, current_player)
+        print_board(board)
+        turn += 1
+
+        if check_winner(board) == player:
+            print(f"{player} wins!")
+            break 
+        elif check_winner(board) == opponent:
+            print(f"{opponent} wins!")
+            break
+        
+        elif len(get_empty_squares(board)) == 0:
+            print("Draw!")
+            break
+
+
+
+def players_turn(player, opponent, turn):
+    return player if turn % 2 == 0 else opponent
+
+def get_pos(index):
+    return divmod(index - 1, 3)
 
     
-
 
 #Initialise board 
 def create_board():
     return np.arange(1, 10).astype(str).reshape(3,3)
 
-board = create_board()
 
 #Pretty Print
 def print_board(board):
