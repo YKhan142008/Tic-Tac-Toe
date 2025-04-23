@@ -1,153 +1,173 @@
-import random
-import re 
 from math import inf
 import numpy as np
 
-
-count = 0 #Represents the number of recurssive calls used by the minimax function
-
+count = 0  # Number of recursive calls
+transposition_table = {}
 
 def main():
     board = create_board()
     print_board(board)
-    player = input("Do you want to be x or o: ").strip().upper()
     
-    while True:
-        if player == "O" or player == "X":
-            pvc = input("Would you like to play against a computer (Y or N) ").strip().upper()
-            if pvc in ["Y", "N"]:
-                break 
-            continue
-            
-        else:
-            print("You must enter x or o")
-            player = input("Do you want to be x or o: ").strip().upper()
-        
-        
+    player = input("Do you want to be X or O? ").strip().upper()
+    while player not in ["X", "O"]:
+        print("Invalid input. Please enter X or O.")
+        player = input("Do you want to be X or O? ").strip().upper()
     
     opponent = "O" if player == "X" else "X"
-    eval_dict = {player: 1, opponent: -1} #Assigns an eval value if the player/opponent wins
+    
+    pvc = input("Would you like to play against a computer (Y or N)? ").strip().upper()
+    while pvc not in ["Y", "N"]:
+        pvc = input("Invalid input. Enter Y or N: ").strip().upper()
+
     if pvc == "N":
         player_versus_player(board, player, opponent)
     else:
-        return
+        play_first = input("Do you want to play first (Y or N)? ").strip().upper()
+        while play_first not in ["Y", "N"]:
+            play_first = input("Invalid input. Enter Y or N: ").strip().upper()
 
+        # Determine evaluation dictionary
+        if play_first == "Y":
+            eval_dict = {player: 1, opponent: -1}
+            human_player, computer_player = player, opponent
+        else:
+            eval_dict = {opponent: 1, player: -1}
+            human_player, computer_player = opponent, player
+
+        player_versus_computer(board, eval_dict, human_player, computer_player)
+
+# ========== Game Modes ==========
 
 def player_versus_player(board, player, opponent):
     turn = 0
     while True:
-        current_player = players_turn(player, opponent, turn)
+        current_player = player if turn % 2 == 0 else opponent
         try:
-            move = int(input(f"Enter the number you want to play {current_player}: "))
+            move = int(input(f"Enter your move {current_player} (1-9): "))
         except ValueError:
-            print(f"Index must be a number.")
-        
+            print("Invalid input. Enter a number 1-9.")
+            continue
+
         if move not in range(1, 10):
-            print("Index must be in range (1-9)")
-        
+            print("Move must be between 1 and 9.")
+            continue
+
         row, col = get_pos(move)
+        if board[row, col] not in [str(i) for i in range(1, 10)]:
+            print("That square is already taken.")
+            continue
+
         play_move(row, col, board, current_player)
         print_board(board)
+
+        winner = check_winner(board)
+        if winner:
+            print(f"{winner} wins!")
+            break
+        if check_draw(board):
+            print("Draw!")
+            break
         turn += 1
 
-        if check_winner(board) == player:
-            print(f"{player} wins!")
-            break 
-        elif check_winner(board) == opponent:
-            print(f"{opponent} wins!")
+def player_versus_computer(board, eval_dict, human_player, computer_player):
+    turn = 0
+    while True:
+        current_player = human_player if turn % 2 == 0 else computer_player
+
+        if current_player == human_player:
+            try:
+                move = int(input(f"Enter your move {human_player} (1-9): "))
+            except ValueError:
+                print("Invalid input. Enter a number 1-9.")
+                continue
+
+            if move not in range(1, 10):
+                print("Move must be between 1 and 9.")
+                continue
+
+            row, col = get_pos(move)
+            if board[row, col] not in [str(i) for i in range(1, 10)]:
+                print("That square is already taken.")
+                continue
+
+            play_move(row, col, board, human_player)
+            print_board(board)
+
+        else:
+            print("Computer is thinking...")
+            play_best_move(board, eval_dict, computer_player)
+            print_board(board)
+
+        winner = check_winner(board)
+        if winner:
+            if winner == human_player:
+                print("You win!")
+            else:
+                print("Computer wins!")
             break
-        
-        elif len(get_empty_squares(board)) == 0:
+
+        if check_draw(board):
             print("Draw!")
             break
 
+        turn += 1
 
+# ========== Core Game Logic ==========
 
-def players_turn(player, opponent, turn):
-    return player if turn % 2 == 0 else opponent
+def create_board():
+    return np.arange(1, 10).astype(str).reshape(3, 3)
+
+def print_board(board):
+    print()
+    for i in range(3):
+        print("     |     |     ")
+        print(f"  {board[i, 0]}  |  {board[i, 1]}  |  {board[i, 2]}  ")
+        print("     |     |     ")
+        if i < 2:
+            print("-" * 18)
+    print()
 
 def get_pos(index):
     return divmod(index - 1, 3)
 
-    
-
-#Initialise board 
-def create_board():
-    return np.arange(1, 10).astype(str).reshape(3,3)
-
-
-#Pretty Print
-def print_board(board):
-    board_lines = " " * 5 + "|" + " "*5 + "|" + " "*5  
-    for i in range(np.size(board, 0)):
-        print(board_lines)
-        print(f'  {board[i, 0]}  |  {board[i, 1]}  |  {board[i, 2]}   ')
-        print(board_lines)
-        if i < np.size(board, 0) - 1:
-            print("-"* 18)
-
-
 def play_move(row, col, board, player):
-    if board[row, col] in [str(i) for i in range(1, 10)]:  board[row, col] = player 
+    board[row, col] = player
 
-
-
-#Check win conditions 
 def check_winner(board):
-    #Check horizontal and vertical winner
     for i in range(3):
         if np.all(board[i, :] == board[i, 0]):
             return board[i, 0]
         if np.all(board[:, i] == board[0, i]):
             return board[0, i]
-    
-    #Diagonal winner 
     if np.all(np.diag(board) == board[1, 1]):
-        return board[1,1]
+        return board[1, 1]
     if np.all(np.diag(np.fliplr(board)) == board[1, 1]):
         return board[1, 1]
-    
     return None
 
+def check_draw(board):
+    return len(get_empty_squares(board)) == 0 and check_winner(board) is None
+
 def get_empty_squares(board):
-    moves = []
-    for i in range(3):
-        for j in range(3):
-            if board[i, j] in [str(i) for i in range(1, 10)]:
-                moves.append((i, j))
-    return moves
+    return [(i, j) for i in range(3) for j in range(3)
+            if board[i, j] in [str(n) for n in range(1, 10)]]
 
 def order_moves(board, player):
     moves = get_empty_squares(board)
-    ordered_moves = []
-
+    ordered = []
     for move in moves:
         board_copy = np.copy(board)
-        play_move(move[0], move[1], board_copy, player)
-
+        play_move(*move, board_copy, player)
         if check_winner(board_copy) == player:
-            # Winning move, add to the front
-            ordered_moves.insert(0, move)
-            
+            ordered.insert(0, move)
         else:
-            # Non-winning move, add to the back
-            ordered_moves.append(move)
+            ordered.append(move)
+    return ordered
 
-    return ordered_moves
-
-        
-
-def check_draw(board):
-   if len(get_empty_squares(board)) == 0 and not check_winner(board):
-       return True 
-   return False
-
-
-transposition_table = {}
+# ========== Minimax ==========
 
 def minimaxAB(board, depth, alpha, beta, eval_dict, current_player):
     global count, transposition_table
-
     key = board.tobytes()
 
     if key in transposition_table:
@@ -155,25 +175,22 @@ def minimaxAB(board, depth, alpha, beta, eval_dict, current_player):
 
     winner = check_winner(board)
     if winner:
-        count += 1
         return eval_dict[winner]
-    
     if check_draw(board):
-        count += 1
         return 0
-    
-    is_maximizer = eval_dict[current_player] == 1
-    players = list(eval_dict.keys())
-    next_player = players[1] if current_player == players[0] else players[1]
 
-    if is_maximizer:
+    is_max = eval_dict[current_player] == 1
+    players = list(eval_dict.keys())
+    next_player = players[1] if current_player == players[0] else players[0]
+
+    if is_max:
         max_eval = -inf
         for move in order_moves(board, current_player):
             board_copy = np.copy(board)
-            play_move(move[0], move[1], board_copy, current_player)
-            eval = minimaxAB(board_copy, depth + 1, alpha, beta, next_player)
-            max_eval = max(max_eval, eval)
-            alpha = max(alpha, eval)
+            play_move(*move, board_copy, current_player)
+            eval_score = minimaxAB(board_copy, depth + 1, alpha, beta, eval_dict, next_player)
+            max_eval = max(max_eval, eval_score)
+            alpha = max(alpha, eval_score)
             if beta <= alpha:
                 break
         transposition_table[key] = max_eval
@@ -182,37 +199,35 @@ def minimaxAB(board, depth, alpha, beta, eval_dict, current_player):
         min_eval = inf
         for move in order_moves(board, current_player):
             board_copy = np.copy(board)
-            play_move(move[0], move[1], board_copy, current_player)
-            eval = minimaxAB(board_copy, depth + 1, alpha, beta, next_player)
-            min_eval = min(min_eval, eval)
-            beta = min(beta, min_eval)
+            play_move(*move, board_copy, current_player)
+            eval_score = minimaxAB(board_copy, depth + 1, alpha, beta, eval_dict, next_player)
+            min_eval = min(min_eval, eval_score)
+            beta = min(beta, eval_score)
             if beta <= alpha:
                 break
         transposition_table[key] = min_eval
         return min_eval
 
-
 def play_best_move(board, eval_dict, current_player):
-    is_maximizer = eval_dict[current_player] == 1
-    best_score = -inf if is_maximizer else inf
+    is_max = eval_dict[current_player] == 1
+    best_score = -inf if is_max else inf
     best_move = None
     players = list(eval_dict.keys())
+    next_player = players[1] if current_player == players[0] else players[0]
 
     for move in order_moves(board, current_player):
         board_copy = np.copy(board)
-        play_move(move[0], move[1], board_copy, current_player)
+        play_move(*move, board_copy, current_player)
+        score = minimaxAB(board_copy, 0, -inf, inf, eval_dict, next_player)
 
-        next_player = players[1] if current_player == players[0] else players[0]
-        score = minimaxAB(board_copy, 0, -inf, inf, next_player) 
-
-        if (is_maximizer and score > best_score) or (not is_maximizer and score < best_score):
+        if (is_max and score > best_score) or (not is_max and score < best_score):
             best_score = score
             best_move = move
-    
-    print(f"Best score for {current_player}: {best_score}")
-    play_move(best_move[0], best_move[1], board, current_player)
 
+    print(f"Computer chooses position {best_move[0] * 3 + best_move[1] + 1} (score: {best_score})")
+    play_move(*best_move, board, current_player)
 
+# ========== Run Game ==========
 
 if __name__ == "__main__":
     main()
