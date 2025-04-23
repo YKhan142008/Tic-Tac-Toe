@@ -8,16 +8,23 @@ count = 0 #Represents the number of recurssive calls used by the minimax functio
 
 
 def main():
-   
+    player = None
+    
     while True:
-        player = input("Do you want to be x or o: ").strip().upper()
         if player == "O" or player == "X":
             break
         else:
-            continue
+            print("You must enter x or o")
+            player = input("Do you want to be x or o: ").strip().upper()
+        
+        pvc = input("Would you like to play against a computer (Y or N) ").strip().upper()
+        if pvc in ["Y", "N"]:
+            break 
+        
     
     opponent = "O" if player == "X" else "X"
     eval_dict = {player: 1, opponent: -1} #Assigns an eval value if the player/opponent wins
+    
 
     
 
