@@ -8,8 +8,8 @@ count = 0 #Represents the number of recurssive calls used by the minimax functio
 
 
 def main():
-    player = None #Determines the player who starts
-    while matches := re.search(r"^*(o|x)$", player):
+    player = '' #Determines the player who starts
+    while matches := re.search(r"^(o|x)*$", player):
         player = matches.group(1)
     else:
         player = input("Do you want to be x or o: ").upper()
