@@ -3,6 +3,7 @@ import numpy as np
 
 count = 0  # Number of recursive calls
 transposition_table = {}
+computer_play_first = False
 
 def main():
     board = create_board()
@@ -27,14 +28,15 @@ def main():
             play_first = input("Invalid input. Enter Y or N: ").strip().upper()
 
         # Determine evaluation dictionary
+        eval_dict = {player: 1, opponent: -1}
+        human_player, computer_player = player, opponent
+        
         if play_first == "Y":
-            eval_dict = {player: 1, opponent: -1}
-            human_player, computer_player = player, opponent
+           computer_play_first = False
         else:
-            eval_dict = {opponent: 1, player: -1}
-            human_player, computer_player = opponent, player
-
-        player_versus_computer(board, eval_dict, human_player, computer_player)
+           computer_play_first = True
+        
+        player_versus_computer(board, eval_dict, human_player, computer_player, computer_play_first)
 
 # ========== Game Modes ==========
 
@@ -69,10 +71,13 @@ def player_versus_player(board, player, opponent):
             break
         turn += 1
 
-def player_versus_computer(board, eval_dict, human_player, computer_player):
+def player_versus_computer(board, eval_dict, human_player, computer_player, play_first):
     turn = 0
     while True:
-        current_player = human_player if turn % 2 == 0 else computer_player
+        if not play_first:
+            current_player = human_player if turn % 2 == 0 else computer_player
+        else:
+            current_player = computer_player if turn % 2 == 0 else human_player
 
         if current_player == human_player:
             try:
